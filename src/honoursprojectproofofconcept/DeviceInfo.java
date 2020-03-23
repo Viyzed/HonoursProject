@@ -2,10 +2,18 @@ package honoursprojectproofofconcept;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import javax.swing.*;
 
@@ -31,6 +39,7 @@ public class DeviceInfo extends JFrame {
 	private JScrollPane sclIP;
 	private DefaultListModel<Integer> lstIPM;
 	private JButton btnClear;
+	private ArrayList<Integer> ports;
 
 	private JTextArea txtSpec;
 	
@@ -49,6 +58,8 @@ public class DeviceInfo extends JFrame {
 		setResizable(false);
 		setVisible(true);
 		setLayout(new GridLayout(4,2));
+		
+		ports = constructPortsArray();
 		
 		this.ip = ip;
 		hostName = this.ip.getHostName();
@@ -126,6 +137,21 @@ public class DeviceInfo extends JFrame {
 
 	}
 	
+	public ArrayList<Integer> constructPortsArray() {
+		ArrayList<Integer> array = new ArrayList<Integer>();
+		Scanner pScan = null;
+		try {
+	    	pScan = new Scanner(new File("C:\\Users\\Andrew\\ports.csv"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	    pScan.useDelimiter(",");
+	    while(pScan.hasNext()) {
+	    	array.add(pScan.nextInt());
+	    }
+	    return array;
+	}
+	
 	public String getIpv6Addresses(InetAddress[] addresses) {
 	    for (InetAddress addr : addresses) {	    	
 	        if (addr instanceof Inet6Address) {
@@ -138,16 +164,17 @@ public class DeviceInfo extends JFrame {
 	class Worker extends SwingWorker<Void, Void> {
 		@Override
 		protected Void doInBackground() throws Exception {
-			for(int i = 9999; i < 10000; i++) {
+		    
+			for(int port : ports) {
 					
 					try {
 						System.out.println("Open new Socket...");
-						Socket SOCKET = new Socket(hostName, i);
-						lstIPM.addElement(i);
-						System.out.println("Port " + i + " is open on " + hostName);
+						Socket SOCKET = new Socket(hostName, port);
+						lstIPM.addElement(port);
+						System.out.println("Port " + port + " is open on " + hostName);
 						SOCKET.close();
 					} catch(Exception e) {
-						System.out.println("Port " + i + " is closed on " + hostName);
+						System.out.println("Port " + port + " is closed on " + hostName);
 						continue;
 					}
 			}
