@@ -2,13 +2,13 @@ package honoursproject;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Scanner;
 
 import javax.swing.*;
@@ -160,11 +160,22 @@ public class DeviceInfo extends JFrame {
 	
 	private void getDeviceSpecs() {
 		NetworkInterface netInterface = null;
-		byte[] mac = null;
 		try {
-			netInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(hostName)); 
-			mac = netInterface.getHardwareAddress();
-			StringBuilder sb = new StringBuilder();
+			
+			Process process = Runtime.getRuntime().exec("arp -a " + ip.getHostAddress());
+		    process.waitFor();
+		    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		    
+		    while(reader.ready()) {
+		    	String addr = reader.readLine();
+		    	if(addr.startsWith("  " + ip.getHostAddress())) {
+		    		txtSpec.append("MAC Address: " + addr.substring(addr.indexOf('-')-2, addr.indexOf('-')+ 15));
+		    	}
+		    }
+		    
+			
+			//mac = netInterface.getHardwareAddress();
+			/*StringBuilder sb = new StringBuilder();
 	        for (int x = 0; x < mac.length; x++) {
 	            sb.append(String.format("%02X%s", mac[x], (x < mac.length - 1) ? "-" : ""));
 	        }
@@ -186,7 +197,7 @@ public class DeviceInfo extends JFrame {
 			} else {
 				txtSpec.append("\nIOT Device: False");
 			}
-			txtSubnet.setText((String.valueOf(netInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength())));
+			txtSubnet.setText((String.valueOf(netInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength())));*/
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -232,7 +243,6 @@ public class DeviceInfo extends JFrame {
 					portWorker = new Worker();
 				} else {
 					lstIPM.clear();
-					txtSpec.setText("");
 					portWorker.cancel(true);
 					portWorker = new Worker();
 				}
