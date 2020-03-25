@@ -27,6 +27,8 @@ public class DeviceInfo extends JFrame {
 	private InetAddress[] knownIps;
 	private Socket SOCKET;
 	
+	private static HttpURLConnection connection;
+	
 	private JLabel lblTitle;
 	private JLabel lblIpv6;
 	
@@ -160,19 +162,63 @@ public class DeviceInfo extends JFrame {
 	
 	private void getDeviceSpecs() {
 		NetworkInterface netInterface = null;
+		String mac = null;
+		URL url = null;
+		
 		try {
-			
 			Process process = Runtime.getRuntime().exec("arp -a " + ip.getHostAddress());
 		    process.waitFor();
-		    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		    BufferedReader macReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		    BufferedReader responseReader;
+		    StringBuffer responseContent = new StringBuffer();
+		    String line;
 		    
-		    while(reader.ready()) {
-		    	String addr = reader.readLine();
+		    while(macReader.ready()) {
+		    	String addr = macReader.readLine();
 		    	if(addr.startsWith("  " + ip.getHostAddress())) {
-		    		txtSpec.append("MAC Address: " + addr.substring(addr.indexOf('-')-2, addr.indexOf('-')+ 15));
+		    		mac = (addr.substring(addr.indexOf('-')-2, addr.indexOf('-')+ 15)).toUpperCase();
 		    	}
 		    }
 		    
+		    macReader.close();
+		    
+		    try {
+				url = new URL("https://api.macvendors.com/" + mac);
+				
+				connection = (HttpURLConnection) url.openConnection();
+				connection.setRequestMethod("GET");
+				connection.setConnectTimeout(5000);
+				connection.setReadTimeout(5000);
+				
+				int responseCode = connection.getResponseCode();
+				
+				if(responseCode > 299) {
+					responseReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+					while((line = responseReader.readLine()) != null) {
+						responseContent.append(line);
+					}
+					responseReader.close();
+				} else {
+					responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+					while((line = responseReader.readLine()) != null) {
+						responseContent.append(line);
+					}
+				}
+					responseReader.close();
+					
+				txtSpec.append("Vendor: " + responseContent.toString() + "\n");
+				txtSpec.append("MAC Address: " + mac);
+				
+					
+				
+			} catch (MalformedURLException e1) {
+				e1.printStackTrace();
+			} catch (IOException e2) {
+				e2.printStackTrace();
+			} finally {
+				connection.disconnect();
+			}
+		   
 			
 			//mac = netInterface.getHardwareAddress();
 			/*StringBuilder sb = new StringBuilder();
