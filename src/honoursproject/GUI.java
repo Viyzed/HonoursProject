@@ -1,4 +1,4 @@
-package honoursprojectproofofconcept;
+package honoursproject;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -26,7 +26,7 @@ public class GUI extends JFrame {
 	
 	byte[] ip;
 	ArrayList<JLabel> foundIp;
-	Worker worker = new Worker();
+	Worker scanWorker = new Worker();
 	
 	public GUI() {
 		super("IPv6 Device Finder");
@@ -101,14 +101,13 @@ public class GUI extends JFrame {
 				for(int i=1;i<256;i++) {
 	        		final int j = i;  
 	        		if(btnReset.getText().equals("Stop")) {
-		        		new Thread(new Runnable() {  
-		           		public void run() {
+		        		
 		           			 	
 		                		try {
 		                    		ip[3] = (byte)j;
 		                    		InetAddress address = InetAddress.getByAddress(ip);
 		                    		String output = address.toString().substring(1);
-		                    		if (address.isReachable(5000)) {
+		                    		if (address.isReachable(500)) {
 		                    			InetAddress[] addresses = InetAddress.getAllByName(address.getHostName());
 		                        		System.out.println(output + " is on the network");
 		                        		foundIp.add(new JLabel(output + ">" + address.getHostName()));
@@ -129,8 +128,7 @@ public class GUI extends JFrame {
 		                    		e.printStackTrace();
 		                		}
 		           			 	
-		    				}
-		        		}).start();   
+		    				  
         				}
 	    			}
 				
@@ -140,7 +138,12 @@ public class GUI extends JFrame {
 	}
 	
 	private static class RedCellRenderer extends DefaultListCellRenderer {
-        public Component getListCellRendererComponent( JList list, Object value, int index, boolean isSelected, boolean cellHasFocus ) {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public Component getListCellRendererComponent( JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus ) {
             Component c = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus );
             if(value.toString().endsWith(" ")) {
             	 c.setBackground( Color.RED );
@@ -158,7 +161,7 @@ public class GUI extends JFrame {
 				btnScan.setEnabled(false);
 				btnReset.setText("Stop");
 				lblStatus.setText("Scanning...");
-				worker.execute();
+				scanWorker.execute();
 			}
 			
 			else if(event.getSource()==btnReset) {
@@ -166,13 +169,13 @@ public class GUI extends JFrame {
 					btnScan.setEnabled(true);
 					btnReset.setText("Reset");
 					lblStatus.setText("Ready to scan.");
-					worker.cancel(true);
+					scanWorker.cancel(true);
 					//System.out.println(foundIp);
 
 					
 				} else {
 					lstIPM.clear();;
-					worker = new Worker();
+					scanWorker = new Worker();
 				}
 			}	
 		}

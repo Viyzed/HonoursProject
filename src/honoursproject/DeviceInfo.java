@@ -1,19 +1,15 @@
-package honoursprojectproofofconcept;
+package honoursproject;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 import javax.swing.*;
 
@@ -29,6 +25,7 @@ public class DeviceInfo extends JFrame {
 	private InetAddress ip;
 	private String hostName;
 	private InetAddress[] knownIps;
+	private Socket SOCKET;
 	
 	private JLabel lblTitle;
 	private JLabel lblIpv6;
@@ -49,7 +46,7 @@ public class DeviceInfo extends JFrame {
 	private JTextField txtIpEdit;
 	private JButton btnSave;
 
-	private Worker worker = new Worker();
+	private Worker portWorker = new Worker();
 	
 	public DeviceInfo(InetAddress ip) {
 		super("Device Specification");
@@ -128,9 +125,9 @@ public class DeviceInfo extends JFrame {
 		bottomPanel.add(bottomBottomPanel, BorderLayout.PAGE_END);
 		add(bottomPanel);
 		
+		this.getDeviceSpecs();
 		
 		EventHandler handler = new EventHandler();
-		MouseHandler mHandler = new MouseHandler();
 		btnPortScan.addActionListener(handler);
 		btnPortConnect.addActionListener(handler);
 		btnClear.addActionListener(handler);
@@ -161,6 +158,40 @@ public class DeviceInfo extends JFrame {
 	    return "Device is not IPv6 capable.";
 	}
 	
+	private void getDeviceSpecs() {
+		NetworkInterface netInterface = null;
+		byte[] mac = null;
+		try {
+			netInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(hostName)); 
+			mac = netInterface.getHardwareAddress();
+			StringBuilder sb = new StringBuilder();
+	        for (int x = 0; x < mac.length; x++) {
+	            sb.append(String.format("%02X%s", mac[x], (x < mac.length - 1) ? "-" : ""));
+	        }
+	        Enumeration<InetAddress> inetAddresses = netInterface.getInetAddresses();
+	        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+	            if(inetAddress instanceof Inet6Address) {
+	            	txtIpEdit.setText(String.valueOf(inetAddress));
+	            }
+	        }
+			txtSpec.setText("MAC Address: " + sb.toString());
+			txtSpec.append("\nSystem OS: " + System.getProperty("os.name"));
+			System.getProperties().list(System.out);
+			if(System.getProperty("os.name").startsWith("Windows")) {
+				iot = false;
+				txtSpec.append("\nHW: Desktop PC " + (System.getProperty("sun.cpu.isalist").equals("amd64") ? "(x64)" : "(x86)"));
+			}
+			if(iot) {
+				txtSpec.append("\nIOT Device: True");
+			} else {
+				txtSpec.append("\nIOT Device: False");
+			}
+			txtSubnet.setText((String.valueOf(netInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength())));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	class Worker extends SwingWorker<Void, Void> {
 		@Override
 		protected Void doInBackground() throws Exception {
@@ -169,7 +200,7 @@ public class DeviceInfo extends JFrame {
 					
 					try {
 						System.out.println("Open new Socket...");
-						Socket SOCKET = new Socket(hostName, port);
+						SOCKET = new Socket(hostName, port);
 						lstIPM.addElement(port);
 						System.out.println("Port " + port + " is open on " + hostName);
 						SOCKET.close();
@@ -190,43 +221,26 @@ public class DeviceInfo extends JFrame {
 		public void actionPerformed(ActionEvent event) {
 			if(event.getSource()==btnPortScan) {
 				btnPortScan.setEnabled(false);
-				worker.execute();
+				btnClear.setText("Stop");
+				portWorker.execute();
 			} 
 			if(event.getSource()==btnClear) {
-				worker.cancel(true);
-				btnPortScan.setEnabled(true);
-				lstIPM.clear();
-				txtSpec.setText("");
-				worker = new Worker();
+				if(btnClear.getText().equals("Stop")) {
+					btnClear.setText("Clear");
+					portWorker.cancel(true);
+					btnPortScan.setEnabled(true);
+					portWorker = new Worker();
+				} else {
+					lstIPM.clear();
+					txtSpec.setText("");
+					portWorker.cancel(true);
+					portWorker = new Worker();
+				}
 			}
 			if(event.getSource()==btnPortConnect) {
 				try {
 					Socket SOCKET = new Socket(hostName, lstIP.getSelectedValue());
-					NetworkInterface netInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(hostName)); 
-					byte[] mac = netInterface.getHardwareAddress();
-					StringBuilder sb = new StringBuilder();
-			        for (int x = 0; x < mac.length; x++) {
-			            sb.append(String.format("%02X%s", mac[x], (x < mac.length - 1) ? "-" : ""));
-			        }
-			        Enumeration<InetAddress> inetAddresses = netInterface.getInetAddresses();
-			        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
-			            if(inetAddress instanceof Inet6Address) {
-			            	txtIpEdit.setText(String.valueOf(inetAddress));
-			            }
-			        }
-					txtSpec.setText("MAC Address: " + sb.toString());
-					txtSpec.append("\nSystem OS: " + System.getProperty("os.name"));
-					System.getProperties().list(System.out);
-					if(System.getProperty("os.name").startsWith("Windows")) {
-						iot = false;
-						txtSpec.append("\nHW: Desktop PC " + (System.getProperty("sun.cpu.isalist").equals("amd64") ? "(x64)" : "(x86)"));
-					}
-					if(iot) {
-						txtSpec.append("\nIOT Device: True");
-					} else {
-						txtSpec.append("\nIOT Device: False");
-					}
-					txtSubnet.setText((String.valueOf(netInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength())));
+					
 					SOCKET.close();
 				} catch (UnknownHostException e) {
 					txtSpec.setText("Port " + lstIP.getSelectedValue() + " cannot be opened on " + hostName);
@@ -237,36 +251,5 @@ public class DeviceInfo extends JFrame {
 		}
 	}
 		
-	
-	
-	private class MouseHandler extends MouseAdapter implements MouseListener {
-
-		@Override
-		public void mouseClicked(MouseEvent e) {
-			
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-			
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			
-			
-		}
-		
-		@Override
-		public void mouseEntered(MouseEvent e) {
-			
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
-			
-		}
-		
-	}
 
 }

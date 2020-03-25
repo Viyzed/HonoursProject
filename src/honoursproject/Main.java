@@ -1,4 +1,4 @@
-package honoursprojectproofofconcept;
+package honoursproject;
 
 import javax.swing.SwingUtilities;
 
