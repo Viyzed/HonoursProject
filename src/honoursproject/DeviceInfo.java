@@ -43,12 +43,6 @@ public class DeviceInfo extends JFrame {
 	private ArrayList<Integer> ports;
 
 	private JTextArea txtSpec;
-	
-	private JLabel lblSubnet;
-	private JTextField txtSubnet;
-	private JLabel lblIpEdit;
-	private JTextField txtIpEdit;
-	private JButton btnSave;
 
 	private Worker portWorker = new Worker();
 	
@@ -110,24 +104,6 @@ public class DeviceInfo extends JFrame {
 		lowerPanel.add(rightLowerPanel);
 		
 		add(lowerPanel);
-		
-		Panel bottomPanel = new Panel(new BorderLayout());
-		Panel topBottomPanel = new Panel(new FlowLayout());
-		Panel bottomBottomPanel = new Panel(new FlowLayout());
-		lblSubnet = new JLabel("IPv6 Subnet: ");
-		txtSubnet = new JTextField("\t\t\t\t");
-		lblIpEdit = new JLabel("New IPv6 Address: ");
-		txtIpEdit = new JTextField("\t\t\t\t");
-		txtSubnet.setEditable(false);
-		btnSave = new JButton("Save");
-		topBottomPanel.add(lblSubnet);
-		topBottomPanel.add(txtSubnet);
-		bottomBottomPanel.add(lblIpEdit);
-		bottomBottomPanel.add(txtIpEdit);
-		bottomBottomPanel.add(btnSave);
-		bottomPanel.add(topBottomPanel, BorderLayout.PAGE_START);
-		bottomPanel.add(bottomBottomPanel, BorderLayout.PAGE_END);
-		add(bottomPanel);
 		
 		try {
 			this.getDeviceSpecs();
@@ -192,19 +168,13 @@ public class DeviceInfo extends JFrame {
 			try {
 				hwAddr = netInterface.getHardwareAddress();
 			} catch (SocketException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			StringBuilder sb = new StringBuilder();
 	        for (int x = 0; x < hwAddr.length; x++) {
 	            sb.append(String.format("%02X%s", hwAddr[x], (x < hwAddr.length - 1) ? "-" : ""));
 	        }
-	        Enumeration<InetAddress> inetAddresses = netInterface.getInetAddresses();
-	        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
-	            if(inetAddress instanceof Inet6Address) {
-	            	txtIpEdit.setText(String.valueOf(inetAddress));
-	            }
-	        }
+
 			txtSpec.setText("MAC Address: " + sb.toString());
 			txtSpec.append("\nSystem OS: " + System.getProperty("os.name"));
 			System.getProperties().list(System.out);
@@ -217,7 +187,7 @@ public class DeviceInfo extends JFrame {
 			} else {
 				txtSpec.append("\nIOT Device: False");
 			}
-			txtSubnet.setText((String.valueOf(netInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength())));
+
 		} else {
 		
 			try {
@@ -327,15 +297,7 @@ public class DeviceInfo extends JFrame {
 				}
 			}
 			if(event.getSource()==btnPortConnect) {
-				try {
-					Socket SOCKET = new Socket(hostName, lstIP.getSelectedValue());
-					txtSpec.append(SOCKET.toString() + "\n");
-					SOCKET.close();
-				} catch (UnknownHostException e) {
-					txtSpec.setText("Port " + lstIP.getSelectedValue() + " cannot be opened on " + hostName);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				new DeviceInteraction(ip.getHostAddress(), lstIP.getSelectedValue());
 			}
 		}
 	}
