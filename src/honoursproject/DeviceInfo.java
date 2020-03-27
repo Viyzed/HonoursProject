@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Scanner;
 
 import javax.swing.*;
@@ -52,7 +54,7 @@ public class DeviceInfo extends JFrame {
 	
 	public DeviceInfo(InetAddress ip) {
 		super("Device Specification");
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		setSize(600, 300);
 		setResizable(false);
 		setVisible(true);
@@ -127,7 +129,11 @@ public class DeviceInfo extends JFrame {
 		bottomPanel.add(bottomBottomPanel, BorderLayout.PAGE_END);
 		add(bottomPanel);
 		
-		this.getDeviceSpecs();
+		try {
+			this.getDeviceSpecs();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
 		
 		EventHandler handler = new EventHandler();
 		btnPortScan.addActionListener(handler);
@@ -142,8 +148,12 @@ public class DeviceInfo extends JFrame {
 		try {
 	    	pScan = new Scanner(new File("C:\\Users\\Andrew\\ports.csv"));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+			try {
+				pScan = new Scanner(new File("/Users/Andrew/GitHub/HonoursProject/bin/lists/ports.csv"));
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			}
+		} 
 	    pScan.useDelimiter(",");
 	    while(pScan.hasNext()) {
 	    	array.add(pScan.nextInt());
@@ -160,70 +170,34 @@ public class DeviceInfo extends JFrame {
 	    return "Device is not IPv6 capable.";
 	}
 	
-	private void getDeviceSpecs() {
-		//NetworkInterface netInterface = null;
+	private void getDeviceSpecs() throws UnknownHostException {
+		NetworkInterface netInterface = null;
+		try {
+			netInterface = NetworkInterface.getByInetAddress(ip);
+		} catch (SocketException e3) {
+			e3.printStackTrace();
+		}
 		String mac = null;
 		URL url = null;
+		String cmd = null;
 		
-		try {
-			Process process = Runtime.getRuntime().exec("arp -a " + ip.getHostAddress());
-		    process.waitFor();
-		    BufferedReader macReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		    BufferedReader responseReader;
-		    StringBuffer responseContent = new StringBuffer();
-		    String line;
-		    
-		    while(macReader.ready()) {
-		    	String addr = macReader.readLine();
-		    	if(addr.startsWith("  " + ip.getHostAddress())) {
-		    		mac = (addr.substring(addr.indexOf('-')-2, addr.indexOf('-')+ 15)).toUpperCase();
-		    	}
-		    }
-		    
-		    macReader.close();
-		    
-		    try {
-				url = new URL("https://api.macvendors.com/" + mac);
-				
-				connection = (HttpURLConnection) url.openConnection();
-				connection.setRequestMethod("GET");
-				connection.setConnectTimeout(5000);
-				connection.setReadTimeout(5000);
-				
-				int responseCode = connection.getResponseCode();
-				
-				if(responseCode > 299) {
-					responseReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-					while((line = responseReader.readLine()) != null) {
-						responseContent.append(line);
-					}
-					responseReader.close();
-				} else {
-					responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-					while((line = responseReader.readLine()) != null) {
-						responseContent.append(line);
-					}
-				}
-					responseReader.close();
-					
-				txtSpec.append("Vendor: " + responseContent.toString() + "\n");
-				txtSpec.append("MAC Address: " + mac + "\n");
-				
-					
-				
-			} catch (MalformedURLException e1) {
-				e1.printStackTrace();
-			} catch (IOException e2) {
-				e2.printStackTrace();
-			} finally {
-				connection.disconnect();
+		if(System.getProperties().getProperty("os.name").startsWith("Windows")) {
+			cmd = "arp -a ";
+		} else {
+			cmd = "arp ";
+		}
+		
+		if(ip.equals(InetAddress.getLocalHost())) {
+			byte[] hwAddr = null;
+			try {
+				hwAddr = netInterface.getHardwareAddress();
+			} catch (SocketException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		   
-			
-			//mac = netInterface.getHardwareAddress();
-			/*StringBuilder sb = new StringBuilder();
-	        for (int x = 0; x < mac.length; x++) {
-	            sb.append(String.format("%02X%s", mac[x], (x < mac.length - 1) ? "-" : ""));
+			StringBuilder sb = new StringBuilder();
+	        for (int x = 0; x < hwAddr.length; x++) {
+	            sb.append(String.format("%02X%s", hwAddr[x], (x < hwAddr.length - 1) ? "-" : ""));
 	        }
 	        Enumeration<InetAddress> inetAddresses = netInterface.getInetAddresses();
 	        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
@@ -243,9 +217,68 @@ public class DeviceInfo extends JFrame {
 			} else {
 				txtSpec.append("\nIOT Device: False");
 			}
-			txtSubnet.setText((String.valueOf(netInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength())));*/
-		} catch(Exception e) {
-			e.printStackTrace();
+			txtSubnet.setText((String.valueOf(netInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength())));
+		} else {
+		
+			try {
+				Process process = Runtime.getRuntime().exec(cmd + ip.getHostAddress());
+			    process.waitFor();
+			    BufferedReader macReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			    BufferedReader responseReader;
+			    StringBuffer responseContent = new StringBuffer();
+			    String line;
+			    
+			    while(macReader.ready()) {
+			    	String addr = macReader.readLine();
+			    	if(addr.startsWith("  " + ip.getHostAddress())) {
+			    		mac = (addr.substring(addr.indexOf('-')-2, addr.indexOf('-')+ 15)).toUpperCase();
+			    	} else if(addr.startsWith("? (" + ip.getHostAddress())) {
+			    		mac = (addr.substring(addr.indexOf(':')-2, addr.indexOf(':')+15)).toUpperCase();
+			    	}
+			    }
+			    
+			    macReader.close();
+			    
+			    try {
+					url = new URL("https://api.macvendors.com/" + mac);
+					
+					connection = (HttpURLConnection) url.openConnection();
+					connection.setRequestMethod("GET");
+					connection.setConnectTimeout(5000);
+					connection.setReadTimeout(5000);
+					
+					int responseCode = connection.getResponseCode();
+					
+					if(responseCode > 299) {
+						responseReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+						while((line = responseReader.readLine()) != null) {
+							responseContent.append(line);
+						}
+						responseReader.close();
+					} else {
+						responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+						while((line = responseReader.readLine()) != null) {
+							responseContent.append(line);
+						}
+					}
+						responseReader.close();
+						
+					txtSpec.append("Vendor: " + responseContent.toString() + "\n");
+					txtSpec.append("MAC Address: " + mac + "\n");
+					
+						
+					
+				} catch (MalformedURLException e1) {
+					e1.printStackTrace();
+				} catch (IOException e2) {
+					e2.printStackTrace();
+				} finally {
+					connection.disconnect();
+				}
+			    
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
