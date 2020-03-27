@@ -142,8 +142,12 @@ public class DeviceInfo extends JFrame {
 		try {
 	    	pScan = new Scanner(new File("C:\\Users\\Andrew\\ports.csv"));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+			try {
+				pScan = new Scanner(new File("/Users/Andrew/GitHub/HonoursProject/bin/lists/ports.csv"));
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			}
+		} 
 	    pScan.useDelimiter(",");
 	    while(pScan.hasNext()) {
 	    	array.add(pScan.nextInt());
@@ -161,12 +165,18 @@ public class DeviceInfo extends JFrame {
 	}
 	
 	private void getDeviceSpecs() {
-		NetworkInterface netInterface = null;
 		String mac = null;
 		URL url = null;
+		String cmd = null;
+		
+		if(System.getProperties().getProperty("os.name").startsWith("Windows")) {
+			cmd = "arp -a ";
+		} else {
+			cmd = "arp ";
+		}
 		
 		try {
-			Process process = Runtime.getRuntime().exec("arp -a " + ip.getHostAddress());
+			Process process = Runtime.getRuntime().exec(cmd + ip.getHostAddress());
 		    process.waitFor();
 		    BufferedReader macReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		    BufferedReader responseReader;
@@ -177,6 +187,8 @@ public class DeviceInfo extends JFrame {
 		    	String addr = macReader.readLine();
 		    	if(addr.startsWith("  " + ip.getHostAddress())) {
 		    		mac = (addr.substring(addr.indexOf('-')-2, addr.indexOf('-')+ 15)).toUpperCase();
+		    	} else if(addr.startsWith("? (" + ip.getHostAddress())) {
+		    		mac = (addr.substring(addr.indexOf(':')-2, addr.indexOf(':')+15)).toUpperCase();
 		    	}
 		    }
 		    
@@ -207,7 +219,7 @@ public class DeviceInfo extends JFrame {
 					responseReader.close();
 					
 				txtSpec.append("Vendor: " + responseContent.toString() + "\n");
-				txtSpec.append("MAC Address: " + mac);
+				txtSpec.append("MAC Address: " + mac + "\n");
 				
 					
 				
@@ -296,7 +308,7 @@ public class DeviceInfo extends JFrame {
 			if(event.getSource()==btnPortConnect) {
 				try {
 					Socket SOCKET = new Socket(hostName, lstIP.getSelectedValue());
-					
+					txtSpec.append(SOCKET.toString());
 					SOCKET.close();
 				} catch (UnknownHostException e) {
 					txtSpec.setText("Port " + lstIP.getSelectedValue() + " cannot be opened on " + hostName);
