@@ -52,7 +52,7 @@ public class DeviceInfo extends JFrame {
 	
 	public DeviceInfo(InetAddress ip) {
 		super("Device Specification");
-		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(600, 300);
 		setResizable(false);
 		setVisible(true);
@@ -161,7 +161,7 @@ public class DeviceInfo extends JFrame {
 	}
 	
 	private void getDeviceSpecs() {
-		NetworkInterface netInterface = null;
+		//NetworkInterface netInterface = null;
 		String mac = null;
 		URL url = null;
 		
@@ -207,7 +207,7 @@ public class DeviceInfo extends JFrame {
 					responseReader.close();
 					
 				txtSpec.append("Vendor: " + responseContent.toString() + "\n");
-				txtSpec.append("MAC Address: " + mac);
+				txtSpec.append("MAC Address: " + mac + "\n");
 				
 					
 				
@@ -296,7 +296,7 @@ public class DeviceInfo extends JFrame {
 			if(event.getSource()==btnPortConnect) {
 				try {
 					Socket SOCKET = new Socket(hostName, lstIP.getSelectedValue());
-					
+					txtSpec.append(SOCKET.toString() + "\n");
 					SOCKET.close();
 				} catch (UnknownHostException e) {
 					txtSpec.setText("Port " + lstIP.getSelectedValue() + " cannot be opened on " + hostName);
