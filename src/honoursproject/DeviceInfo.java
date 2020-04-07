@@ -257,6 +257,7 @@ public class DeviceInfo extends JFrame {
 		protected Void doInBackground() throws Exception {
 		    
 			for(int port : ports) {
+				if(btnClear.getText().equals("Stop")) {
 					
 					try {
 						System.out.println("Open new Socket...");
@@ -268,6 +269,8 @@ public class DeviceInfo extends JFrame {
 						System.out.println("Port " + port + " is closed on " + hostName);
 						continue;
 					}
+					
+				}
 			}
 			
 			return null;
@@ -289,11 +292,10 @@ public class DeviceInfo extends JFrame {
 					btnClear.setText("Clear");
 					portWorker.cancel(true);
 					btnPortScan.setEnabled(true);
+					portWorker.cancel(true);
 					portWorker = new Worker();
 				} else {
 					lstIPM.clear();
-					portWorker.cancel(true);
-					portWorker = new Worker();
 				}
 			}
 			if(event.getSource()==btnPortConnect) {
