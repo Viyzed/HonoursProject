@@ -2,7 +2,6 @@ package honoursproject;
 
 import java.awt.GridLayout;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 
 import javax.swing.*;
@@ -11,7 +10,7 @@ public class DeviceInteraction extends JFrame {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private Socket socket;
+	private Socket SOCKET;
 	private String inetaddress;
 	private int portNo;
 	
@@ -28,16 +27,16 @@ public class DeviceInteraction extends JFrame {
 		this.portNo = portNo;
 		this.inetaddress = inetaddress;
 		try {
-			this.socket = new Socket(inetaddress, portNo);
+			this.SOCKET = new Socket(this.inetaddress, this.portNo);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		lblSocket = new JLabel("Socket: " + socket.toString());
+		lblSocket = new JLabel("Socket: " + SOCKET.toString());
 		add(lblSocket);
 		
 		try {
-			socket.close();
+			SOCKET.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

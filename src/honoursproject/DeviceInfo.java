@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Scanner;
 
 import javax.swing.*;
@@ -22,7 +20,7 @@ public class DeviceInfo extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private boolean iot;
+	private boolean iot = false;
 	
 	private InetAddress ip;
 	private String hostName;
@@ -179,7 +177,6 @@ public class DeviceInfo extends JFrame {
 			txtSpec.append("\nSystem OS: " + System.getProperty("os.name"));
 			System.getProperties().list(System.out);
 			if(System.getProperty("os.name").startsWith("Windows")) {
-				iot = false;
 				txtSpec.append("\nHW: Desktop PC " + (System.getProperty("sun.cpu.isalist").equals("amd64") ? "(x64)" : "(x86)"));
 			}
 			if(iot) {
@@ -249,6 +246,12 @@ public class DeviceInfo extends JFrame {
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
+			
+			if(iot) {
+				txtSpec.append("IOT Device: True\n");
+			} else {
+				txtSpec.append("IOT Device: False\n");
+			}
 		}
 	}
 	
@@ -270,7 +273,7 @@ public class DeviceInfo extends JFrame {
 						continue;
 					}
 					
-				}
+				} else break;
 			}
 			
 			return null;

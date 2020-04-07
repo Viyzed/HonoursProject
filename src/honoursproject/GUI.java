@@ -129,7 +129,7 @@ public class GUI extends JFrame {
 		                		}
 		           			 	
 		    				  
-        				}
+        				} else break;
 	    			}
 				
 				return null;
