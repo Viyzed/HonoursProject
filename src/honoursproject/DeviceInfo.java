@@ -120,7 +120,7 @@ public class DeviceInfo extends JFrame {
 		ArrayList<Integer> array = new ArrayList<Integer>();
 		Scanner pScan = null;
 		try {
-	    	pScan = new Scanner(new File("C:\\Users\\Andrew\\ports.csv"));
+	    	pScan = new Scanner(new File("lists\\ports.csv"));
 		} catch (FileNotFoundException e) {
 			try {
 				pScan = new Scanner(new File("/Users/Andrew/GitHub/HonoursProject/bin/lists/ports.csv"));
@@ -232,6 +232,9 @@ public class DeviceInfo extends JFrame {
 						
 					txtSpec.append("Vendor: " + responseContent.toString() + "\n");
 					txtSpec.append("MAC Address: " + mac + "\n");
+					if(responseContent.toString().startsWith("TP-LINK")) {
+						iot = true;
+					}
 					
 						
 					
@@ -246,6 +249,7 @@ public class DeviceInfo extends JFrame {
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
+			
 			
 			if(iot) {
 				txtSpec.append("IOT Device: True\n");
