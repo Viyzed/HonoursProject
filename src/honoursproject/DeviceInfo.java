@@ -13,6 +13,8 @@ import java.util.Scanner;
 
 import javax.swing.*;
 
+import org.pcap4j.*;
+
 public class DeviceInfo extends JFrame {
 
 	/**
@@ -43,6 +45,7 @@ public class DeviceInfo extends JFrame {
 	private JTextArea txtSpec;
 
 	private Worker portWorker = new Worker();
+
 	
 	public DeviceInfo(InetAddress ip) {
 		super("Device Specification");
@@ -115,7 +118,7 @@ public class DeviceInfo extends JFrame {
 		btnClear.addActionListener(handler);
 
 	}
-	
+
 	public ArrayList<Integer> constructPortsArray() {
 		ArrayList<Integer> array = new ArrayList<Integer>();
 		Scanner pScan = null;
