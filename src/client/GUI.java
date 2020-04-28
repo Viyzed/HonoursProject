@@ -1,4 +1,4 @@
-package honoursproject;
+package client;
 
 import java.awt.*;
 import java.awt.event.*;

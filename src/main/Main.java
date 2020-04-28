@@ -1,4 +1,4 @@
-package honoursproject;
+package main;
 
 import javax.swing.SwingUtilities;
 
@@ -8,7 +8,7 @@ public class Main {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				new GUI();
+				new client.GUI();
 			}
 		});
 	}

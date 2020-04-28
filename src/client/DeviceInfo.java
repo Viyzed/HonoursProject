@@ -1,4 +1,4 @@
-package honoursproject;
+package client;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import javax.swing.*;
-
-import org.pcap4j.*;
 
 public class DeviceInfo extends JFrame {
 
