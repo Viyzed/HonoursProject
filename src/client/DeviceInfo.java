@@ -22,6 +22,7 @@ public class DeviceInfo extends JFrame {
 	
 	private boolean iot = false;
 	
+	private InetAddress ipv6;
 	private InetAddress ip;
 	private String hostName;
 	private InetAddress[] knownIps;
@@ -61,6 +62,12 @@ public class DeviceInfo extends JFrame {
 			this.knownIps = InetAddress.getAllByName(hostName);
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
+		}
+		
+		for(InetAddress ipa : knownIps) {
+			if(ipa instanceof Inet6Address) {
+				ipv6 = ipa;
+			}
 		}
 		
 		lblTitle = new JLabel(hostName);
@@ -303,7 +310,7 @@ public class DeviceInfo extends JFrame {
 				}
 			}
 			if(event.getSource()==btnPortConnect) {
-				new DeviceInteraction(ip.getHostAddress(), lstIP.getSelectedValue());
+				new DeviceInteraction(ipv6.getHostAddress(), lstIP.getSelectedValue());
 			}
 		}
 	}
