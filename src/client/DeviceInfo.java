@@ -21,9 +21,10 @@ public class DeviceInfo extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
 	private boolean iot = false;
+	private boolean isIpv6 = false;
 	
-	private InetAddress ipv6;
 	private InetAddress ip;
+	private InetAddress ipv6;
 	private String hostName;
 	private InetAddress[] knownIps;
 	private Socket SOCKET;
@@ -67,6 +68,7 @@ public class DeviceInfo extends JFrame {
 		for(InetAddress ipa : knownIps) {
 			if(ipa instanceof Inet6Address) {
 				ipv6 = ipa;
+				isIpv6 = true;
 			}
 		}
 		
@@ -310,7 +312,11 @@ public class DeviceInfo extends JFrame {
 				}
 			}
 			if(event.getSource()==btnPortConnect) {
-				new DeviceInteraction(ipv6.getHostAddress(), lstIP.getSelectedValue());
+				if(isIpv6) {
+					new DeviceInteraction(ipv6.getHostAddress(), lstIP.getSelectedValue());
+				} else {
+					new DeviceInteraction(ip.getHostAddress(), lstIP.getSelectedValue());
+				}
 			}
 		}
 	}
