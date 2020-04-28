@@ -121,13 +121,9 @@ public class DeviceInfo extends JFrame {
 		ArrayList<Integer> array = new ArrayList<Integer>();
 		Scanner pScan = null;
 		try {
-	    	pScan = new Scanner(new File("lists\\ports.csv"));
+	    	pScan = new Scanner(new File("src/lists/ports.csv"));
 		} catch (FileNotFoundException e) {
-			try {
-				pScan = new Scanner(new File("/Users/Andrew/GitHub/HonoursProject/bin/lists/ports.csv"));
-			} catch (FileNotFoundException e1) {
-				e1.printStackTrace();
-			}
+			System.err.print(e);
 		} 
 	    pScan.useDelimiter(",");
 	    while(pScan.hasNext()) {

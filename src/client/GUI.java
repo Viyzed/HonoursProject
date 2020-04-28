@@ -67,7 +67,6 @@ public class GUI extends JFrame {
 		lstIPM = new DefaultListModel<String>();
 		lstIP = new JList<String>(lstIPM);
 		//lstIP.setEditable(false);
-		lstIP.setBounds(0, 0, this.getWidth(), this.getHeight());
 		lstIP.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		lstIP.setLayoutOrientation(JList.HORIZONTAL_WRAP);
 		lstIP.setVisibleRowCount(-1);
