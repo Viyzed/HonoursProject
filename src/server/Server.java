@@ -32,6 +32,8 @@ public class Server extends JFrame {
 	private ServerSocket sSocket;
 	private Socket cSocket;
 	
+	private GetNextPacket nextPacket;
+	
 	private InetAddress dInetaddress;
 	private int dPort;
 	
