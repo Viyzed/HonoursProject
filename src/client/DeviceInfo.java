@@ -22,6 +22,7 @@ public class DeviceInfo extends JFrame {
 	
 	private boolean iot = false;
 	private boolean isIpv6 = false;
+	private boolean dhcp = false;
 	
 	private InetAddress ip;
 	private InetAddress ipv6;
@@ -70,6 +71,10 @@ public class DeviceInfo extends JFrame {
 				ipv6 = ipa;
 				isIpv6 = true;
 			}
+		}
+		
+		if (ip.getHostName().startsWith("sky")) {
+			dhcp = true;
 		}
 		
 		lblTitle = new JLabel(hostName);
@@ -205,9 +210,12 @@ public class DeviceInfo extends JFrame {
 			    	String addr = macReader.readLine();
 			    	if(addr.startsWith("  " + ip.getHostAddress())) {
 			    		mac = (addr.substring(addr.indexOf('-')-2, addr.indexOf('-')+ 15)).toUpperCase();
-			    	} else if(addr.startsWith("? (" + ip.getHostAddress())) {
+			    	} else if(addr.startsWith(ip.getHostName())) {
 			    		mac = (addr.substring(addr.indexOf(':')-2, addr.indexOf(':')+15)).toUpperCase();
 			    	}
+			    }
+			    if(dhcp) {
+			    	mac = "90:21:06:C8:DC:AC";
 			    }
 			    
 			    macReader.close();

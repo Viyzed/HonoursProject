@@ -50,7 +50,7 @@ public class GUI extends JFrame {
 		
 		lblScan = new JLabel("Scan: ");
 		btnScan = new JButton("Scan");
-		btnScan.setToolTipText("Click to scan on your network for IPv6(IoT) devices.");
+		btnScan.setToolTipText("Click to scan on your network for IPv6 devices.");
 		lblReset = new JLabel("Stop/Reset:");
 		btnReset = new JButton("Reset");
 		upperPanel.add(lblScan);
@@ -185,7 +185,6 @@ public class GUI extends JFrame {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			System.out.println("Mouse click.");
             int index = lstIP.getSelectedIndex();
             System.out.println("Index Selected: " + index);
             String s = (String) lstIP.getSelectedValue();

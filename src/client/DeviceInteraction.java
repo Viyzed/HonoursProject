@@ -22,7 +22,7 @@ public class DeviceInteraction extends JFrame {
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		setSize(600, 300);
 		setResizable(false);
-		setVisible(true);
+		setVisible(false);
 		setLayout(new GridLayout(4,2));
 		
 		lblComm = new JLabel();

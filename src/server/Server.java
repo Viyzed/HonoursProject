@@ -83,7 +83,7 @@ public class Server extends JFrame {
 		@Override
 		protected Void doInBackground() throws Exception {
 			sSocket = new ServerSocket(PORT);
-			System.out.println("Server running and listening on port " + PORT);
+			txtLog.append("Server running and listening on port " + PORT + "\n\n");
 			cSocket = sSocket.accept();
 			System.out.println("Client connected");
 			
@@ -91,7 +91,7 @@ public class Server extends JFrame {
 			BufferedReader br = new BufferedReader(in);
 			
 			String comm = br.readLine();
-			txtLog.append(comm+"\n");
+			txtLog.append(comm+"\n\n");
 			String sInetaddress = br.readLine();
 			String sPort = br.readLine();
 			
@@ -99,7 +99,9 @@ public class Server extends JFrame {
 			dPort = Integer.parseInt(sPort);
 			
 			Socket tmpSock = new Socket(dInetaddress, dPort);
-			txtLog.append(tmpSock.toString()+"\n");
+			txtLog.append(tmpSock.toString().substring(0, 57)+"\n");
+			txtLog.append(tmpSock.toString().substring(57, tmpSock.toString().length())+"\n\n");
+
 			
 			return null;
 		}
@@ -117,6 +119,7 @@ public class Server extends JFrame {
 			} else {
 				btnPwr.setText("Start");
 				lblStatus.setText("Offline");
+				txtLog.setText("");
 				try {
 					sSocket.close();
 				} catch (IOException e) {
