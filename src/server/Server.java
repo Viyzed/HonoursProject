@@ -9,13 +9,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -24,6 +28,15 @@ import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 
+import org.pcap4j.core.NotOpenException;
+import org.pcap4j.core.PcapHandle;
+import org.pcap4j.core.PcapNativeException;
+import org.pcap4j.core.PcapNetworkInterface;
+import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
+import org.pcap4j.core.Pcaps;
+import org.pcap4j.packet.IpV4Packet;
+import org.pcap4j.packet.Packet;
+
 public class Server extends JFrame {
 	
 	private static final long serialVersionUID = 1L;
@@ -31,13 +44,18 @@ public class Server extends JFrame {
 	static final int PORT = 8080;
 	private ServerSocket sSocket;
 	private Socket cSocket;
-	
-	private GetNextPacket nextPacket;
-	
+		
 	private InetAddress dInetaddress;
 	private int dPort;
 	
+	//Pcap4j fields
+	private InetAddress iAddress;
+	private PcapNetworkInterface pcNif;
+	private PcapHandle handle;
+	private Packet packet;
 	
+	
+	//Swing component fields
 	private JLabel lblTitle;
 	private JLabel lblStatus;
 	private JTextArea txtLog;
@@ -52,6 +70,20 @@ public class Server extends JFrame {
 		setSize(500, 400);
 		setResizable(false);
 		setVisible(true);
+		
+		//Set up Pcap4j network interface to listen for packets
+		try {
+			iAddress = InetAddress.getLocalHost();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			pcNif = Pcaps.getDevByAddress(iAddress);
+		} catch (PcapNativeException e) {
+			e.printStackTrace();
+		}
+		
 		
 		Panel upperPanel = new Panel(new FlowLayout());
 		lblTitle = new JLabel("IPv4toIPv6");
@@ -103,6 +135,30 @@ public class Server extends JFrame {
 			Socket tmpSock = new Socket(dInetaddress, dPort);
 			txtLog.append(tmpSock.toString().substring(0, 57)+"\n");
 			txtLog.append(tmpSock.toString().substring(57, tmpSock.toString().length())+"\n\n");
+			
+			try {
+				handle = pcNif.openLive(65536, PromiscuousMode.PROMISCUOUS, 10);
+			} catch (PcapNativeException e) {
+				e.printStackTrace();
+			}
+			
+			try {
+				packet = handle.getNextPacketEx();
+			} catch (EOFException e) {
+				e.printStackTrace();
+			} catch (PcapNativeException e) {
+				e.printStackTrace();
+			} catch (TimeoutException e) {
+				e.printStackTrace();
+			} catch (NotOpenException e) {
+				e.printStackTrace();
+			}
+			
+			handle.close();
+			
+			IpV4Packet ipV4Packet = packet.get(IpV4Packet.class);
+			Inet4Address srcAddr = ipV4Packet.getHeader().getSrcAddr();
+			System.out.println(srcAddr);
 
 			
 			return null;
