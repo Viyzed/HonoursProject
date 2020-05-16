@@ -1,5 +1,7 @@
 package client;
 
+import main.Main;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
@@ -7,7 +9,7 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 
-public class GUI extends JFrame {
+public class DeviceScanner extends JFrame {
 	
 	/**
 	 * 
@@ -28,7 +30,7 @@ public class GUI extends JFrame {
 	ArrayList<JLabel> foundIp;
 	Worker scanWorker = new Worker();
 	
-	public GUI() {
+	public DeviceScanner() {
 		super("IPv6 Device Finder");
 		//System.setProperty("java.net.preferIPv6Stack" , "true");
 		this.ip = null;
@@ -105,6 +107,7 @@ public class GUI extends JFrame {
 		                		try {
 		                    		ip[3] = (byte)j;
 		                    		InetAddress address = InetAddress.getByAddress(ip);
+		                    		Main.ipv4DeskAddr = address;
 		                    		String output = address.toString().substring(1);
 		                    		if (address.isReachable(500)) {
 		                    			InetAddress[] addresses = InetAddress.getAllByName(address.getHostName());
@@ -173,7 +176,7 @@ public class GUI extends JFrame {
 
 					
 				} else {
-					lstIPM.clear();;
+					lstIPM.clear();
 					scanWorker = new Worker();
 				}
 			}	

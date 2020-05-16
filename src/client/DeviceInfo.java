@@ -26,6 +26,7 @@ public class DeviceInfo extends JFrame {
 	
 	private InetAddress ip;
 	private InetAddress ipv6;
+	private String mac;
 	private String hostName;
 	private InetAddress[] knownIps;
 	private Socket SOCKET;
@@ -162,7 +163,7 @@ public class DeviceInfo extends JFrame {
 		} catch (SocketException e3) {
 			e3.printStackTrace();
 		}
-		String mac = null;
+
 		URL url = null;
 		String cmd = null;
 		
@@ -184,6 +185,7 @@ public class DeviceInfo extends JFrame {
 	            sb.append(String.format("%02X%s", hwAddr[x], (x < hwAddr.length - 1) ? "-" : ""));
 	        }
 
+	        
 			txtSpec.setText("MAC Address: " + sb.toString());
 			txtSpec.append("\nSystem OS: " + System.getProperty("os.name"));
 			System.getProperties().list(System.out);
@@ -321,9 +323,9 @@ public class DeviceInfo extends JFrame {
 			}
 			if(event.getSource()==btnPortConnect) {
 				if(isIpv6) {
-					new DeviceInteraction(ipv6.getHostAddress(), lstIP.getSelectedValue());
+					new DeviceInteraction(ipv6.getHostAddress(), lstIP.getSelectedValue(), mac);
 				} else {
-					new DeviceInteraction(ip.getHostAddress(), lstIP.getSelectedValue());
+					new DeviceInteraction(ip.getHostAddress(), lstIP.getSelectedValue(), mac);
 				}
 			}
 		}

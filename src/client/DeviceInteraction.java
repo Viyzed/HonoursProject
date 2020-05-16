@@ -13,11 +13,12 @@ public class DeviceInteraction extends JFrame {
 	
 	private Socket servSock;
 	private String inetaddress;
+	private String mac;
 	private int portNo;
 	
 	private JLabel lblComm;
 	
-	public DeviceInteraction(String inetaddress, int portNo)  {
+	public DeviceInteraction(String inetaddress, int portNo, String mac)  {
 		setTitle("Device Interaction");
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		setSize(600, 300);
@@ -28,9 +29,10 @@ public class DeviceInteraction extends JFrame {
 		lblComm = new JLabel();
 		this.portNo = portNo;
 		this.inetaddress = inetaddress;
+		this.mac = mac;
 		try {
-			this.servSock = new Socket("localhost", 8080);
-			lblComm.setText("Connection with Server open on port: 8080");
+			this.servSock = new Socket("localhost", 5000);
+			lblComm.setText("Connection with Server open on port: 5000");
 		} catch (IOException e) {
 			lblComm.setText("Connection with Server refused.");
 			e.printStackTrace();
@@ -52,6 +54,7 @@ public class DeviceInteraction extends JFrame {
 		pr.println("Connect to " + inetaddress.toString() + " on port " + portNo);
 		pr.println(inetaddress);
 		pr.println(portNo);
+		pr.println(mac);
 		pr.flush();
 	}
 
