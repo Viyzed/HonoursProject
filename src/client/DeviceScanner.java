@@ -107,7 +107,6 @@ public class DeviceScanner extends JFrame {
 		                		try {
 		                    		ip[3] = (byte)j;
 		                    		InetAddress address = InetAddress.getByAddress(ip);
-		                    		Main.ipv4DeskAddr = address;
 		                    		String output = address.toString().substring(1);
 		                    		if (address.isReachable(500)) {
 		                    			InetAddress[] addresses = InetAddress.getAllByName(address.getHostName());
@@ -212,6 +211,7 @@ public class DeviceScanner extends JFrame {
 					} catch (UnknownHostException e) {
 						e.printStackTrace();
 					}
+					Main.ipv4DeskAddr = singleIp;
 					new DeviceInfo(singleIp);
 				}
 			}); 

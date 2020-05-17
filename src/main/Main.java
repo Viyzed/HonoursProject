@@ -11,7 +11,7 @@ import org.pcap4j.util.NifSelector;
 public class Main {
 	
 	public static PcapNetworkInterface netDevice = null;
-	public static  InetAddress ipv4DeskAddr = null;
+	public static InetAddress ipv4DeskAddr = null;
 
 	public static void main(String[] args) {
 		//Get the user to choose a network interface

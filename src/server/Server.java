@@ -9,21 +9,15 @@ import java.awt.FlowLayout;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.concurrent.TimeoutException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -38,12 +32,9 @@ import org.pcap4j.core.BpfProgram.BpfCompileMode;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
-import org.pcap4j.core.PcapHandle.TimestampPrecision;
 import org.pcap4j.core.PcapNativeException;
-import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.PcapStat;
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
-import org.pcap4j.core.Pcaps;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.IcmpV4CommonPacket;
 import org.pcap4j.packet.IcmpV4EchoPacket;
@@ -52,15 +43,11 @@ import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.IpV4Rfc791Tos;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.TcpPacket;
-import org.pcap4j.packet.TcpPacket.Builder;
 import org.pcap4j.packet.namednumber.EtherType;
 import org.pcap4j.packet.namednumber.IcmpV4Code;
 import org.pcap4j.packet.namednumber.IcmpV4Type;
 import org.pcap4j.packet.namednumber.IpNumber;
 import org.pcap4j.packet.namednumber.IpVersion;
-import org.pcap4j.packet.namednumber.TcpPort;
-import org.pcap4j.util.MacAddress;
-import org.pcap4j.util.NifSelector;
 
 public class Server extends JFrame {
 	
@@ -203,19 +190,27 @@ public class Server extends JFrame {
 					}
 					Packet.Builder payloadBuilder = payloadPacket.getBuilder();
 					
-					txtLog.append("Payload Header: \n" + new String(payloadHeader.getRawData(), Charset.forName("UTF-8")) + "\n\n");
+					txtLog.append("Payload Header: \n" + payloadBuilder.build().toString() + "\n\n");
+					try {
+						txtLog.append("TCP Data: \n" + new String(payloadBuilder.build().getRawData(), "UTF-8") + "\n\n");
+					} catch (UnsupportedEncodingException e1) {
+						e1.printStackTrace();
+					}
 				    
 				    IcmpV4Type type = IcmpV4Type.ECHO;
 				    IcmpV4Code code = IcmpV4Code.NO_CODE;
 					final Packet.Builder icmpV4eb = new IcmpV4EchoPacket.Builder();
 					icmpV4eb
 						.payloadBuilder(payloadBuilder);
+					txtLog.append("ICMPv4 Echo Packet: \n" + icmpV4eb.build().toString() + "\n\n");
+					
 					final IcmpV4CommonPacket.Builder icmpV4b = new IcmpV4CommonPacket.Builder();
 					icmpV4b
 						.type(type)
 						.code(code)
 						.payloadBuilder(icmpV4eb)
 						.correctChecksumAtBuild(true);
+					txtLog.append("ICMPv4 Packet: \n" + icmpV4b.build().toString() + "\n\n");
 					
 					final IpV4Packet.Builder ipv4b = new IpV4Packet.Builder();
 				    ipv4b
@@ -231,19 +226,22 @@ public class Server extends JFrame {
 				    final EthernetPacket.Builder eb = new EthernetPacket.Builder();
 				    eb.type(EtherType.IPV4).payloadBuilder(ipv4b).paddingAtBuild(true);
 				    
+				    
 				    ipv4b.dstAddr((Inet4Address) Main.ipv4DeskAddr);
 			        try {
 						ipv4b.srcAddr((Inet4Address) Inet4Address.getLocalHost());
 					} catch (UnknownHostException e) {
 						e.printStackTrace();
 					}
+			        txtLog.append("IPv4 Packet: " + ipv4b.build().toString() + "\n\n");
+			        
 			        eb.srcAddr(packet.get(EthernetPacket.class).getHeader().getSrcAddr());
 			        eb.dstAddr(packet.get(EthernetPacket.class).getHeader().getDstAddr());
 			        eb.pad(payloadHeader.getRawData());
 			        eb.paddingAtBuild(true);
+			        txtLog.append("Ethernet Packet: " + eb.build().toString() + "\n\n");
 			        
 			        Packet IcmpV4Pack = eb.build();
-			        txtLog.append(IcmpV4Pack.toString() + "\n\n");
 					
 			        try {
 			        	handle.sendPacket(IcmpV4Pack);
