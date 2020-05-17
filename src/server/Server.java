@@ -22,6 +22,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.concurrent.TimeoutException;
 
 import javax.swing.BorderFactory;
@@ -186,7 +187,6 @@ public class Server extends JFrame {
 						private static final long serialVersionUID = 1L;
 						@Override
 						public int length() {
-							// TODO Auto-generated method stub
 							return 32;
 						}
 						@Override
@@ -195,20 +195,21 @@ public class Server extends JFrame {
 						}
 					};
 					
-					EthernetPacket newPacket = null;
+					TcpPacket payloadPacket = null;
 					try {
-						newPacket = EthernetPacket.newPacket(payloadHeader.getRawData(), 0, payloadHeader.length());
-					} catch (IllegalRawDataException e) {
-						e.printStackTrace();
+						payloadPacket = TcpPacket.newPacket(payloadHeader.getRawData(), 0, payloadHeader.length());
+					} catch (IllegalRawDataException e1) {
+						e1.printStackTrace();
 					}
+					Packet.Builder payloadBuilder = payloadPacket.getBuilder();
 					
 					txtLog.append("Payload Header: \n" + new String(payloadHeader.getRawData(), Charset.forName("UTF-8")) + "\n\n");
-					txtLog.append(newPacket.toString() + "\n\n");
 				    
 				    IcmpV4Type type = IcmpV4Type.ECHO;
 				    IcmpV4Code code = IcmpV4Code.NO_CODE;
 					final Packet.Builder icmpV4eb = new IcmpV4EchoPacket.Builder();
-					
+					icmpV4eb
+						.payloadBuilder(payloadBuilder);
 					final IcmpV4CommonPacket.Builder icmpV4b = new IcmpV4CommonPacket.Builder();
 					icmpV4b
 						.type(type)
@@ -227,7 +228,7 @@ public class Server extends JFrame {
 				        .correctChecksumAtBuild(true)
 				        .correctLengthAtBuild(true);
 				    
-				    final EthernetPacket.Builder eb = newPacket.getBuilder();
+				    final EthernetPacket.Builder eb = new EthernetPacket.Builder();
 				    eb.type(EtherType.IPV4).payloadBuilder(ipv4b).paddingAtBuild(true);
 				    
 				    ipv4b.dstAddr((Inet4Address) Main.ipv4DeskAddr);
@@ -244,6 +245,13 @@ public class Server extends JFrame {
 			        Packet IcmpV4Pack = eb.build();
 			        txtLog.append(IcmpV4Pack.toString() + "\n\n");
 					
+			        try {
+			        	handle.sendPacket(IcmpV4Pack);
+			        } catch (PcapNativeException e) {
+				        e.printStackTrace();
+			        } catch (NotOpenException e) {
+				        e.printStackTrace();
+			        }
 				}
 			};
 			
