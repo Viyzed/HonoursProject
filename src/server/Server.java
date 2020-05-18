@@ -200,8 +200,8 @@ public class Server extends JFrame {
 				    IcmpV4Type type = IcmpV4Type.ECHO;
 				    IcmpV4Code code = IcmpV4Code.NO_CODE;
 					final Packet.Builder icmpV4eb = new IcmpV4EchoPacket.Builder();
-					icmpV4eb
-						.payloadBuilder(payloadBuilder);
+					//icmpV4eb
+					//	.payloadBuilder(payloadBuilder);
 					txtLog.append("ICMPv4 Echo Packet: \n" + icmpV4eb.build().toString() + "\n\n");
 					
 					final IcmpV4CommonPacket.Builder icmpV4b = new IcmpV4CommonPacket.Builder();
@@ -237,14 +237,15 @@ public class Server extends JFrame {
 			        
 			        eb.srcAddr(packet.get(EthernetPacket.class).getHeader().getSrcAddr());
 			        eb.dstAddr(packet.get(EthernetPacket.class).getHeader().getDstAddr());
-			        eb.pad(payloadHeader.getRawData());
-			        eb.paddingAtBuild(true);
 			        txtLog.append("Ethernet Packet: " + eb.build().toString() + "\n\n");
 			        
 			        Packet IcmpV4Pack = eb.build();
+			        
+			        txtLog.append("IPv6 Packet translated to IPv4.\n\n");
 					
 			        try {
 			        	handle.sendPacket(IcmpV4Pack);
+			        	txtLog.append("IPv4 Packet sent.");
 			        } catch (PcapNativeException e) {
 				        e.printStackTrace();
 			        } catch (NotOpenException e) {
