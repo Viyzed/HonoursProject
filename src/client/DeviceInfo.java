@@ -13,17 +13,20 @@ import java.util.Scanner;
 
 import javax.swing.*;
 
+/**
+ * Device Info
+ * JFrame GUI for getting device hardware information, scanning for open ports
+ */
 public class DeviceInfo extends JFrame {
-
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 1L;
 	
+	//flags for device specs
 	private boolean iot = false;
 	private boolean isIpv6 = false;
 	private boolean dhcp = false;
 	
+	//IP and MAC addresses for device
 	private InetAddress ip;
 	private InetAddress ipv6;
 	private String mac;
@@ -31,8 +34,10 @@ public class DeviceInfo extends JFrame {
 	private InetAddress[] knownIps;
 	private Socket SOCKET;
 	
+	//HttpURL for MAV Vendor API request
 	private static HttpURLConnection connection;
 	
+	//Swing components
 	private JLabel lblTitle;
 	private JLabel lblIpv6;
 	
@@ -46,9 +51,10 @@ public class DeviceInfo extends JFrame {
 
 	private JTextArea txtSpec;
 
+	//SwingUtil worker thread for scanning ports
 	private Worker portWorker = new Worker();
 
-	
+	//JFrame constructor
 	public DeviceInfo(InetAddress ip) {
 		super("Device Specification");
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -57,8 +63,10 @@ public class DeviceInfo extends JFrame {
 		setVisible(true);
 		setLayout(new GridLayout(4,2));
 		
+		//construct array of common TCP port numbers
 		ports = constructPortsArray();
 		
+		//find the IPv6 instance of this device
 		this.ip = ip;
 		hostName = this.ip.getHostName();
 		try {
@@ -66,7 +74,6 @@ public class DeviceInfo extends JFrame {
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 		}
-		
 		for(InetAddress ipa : knownIps) {
 			if(ipa instanceof Inet6Address) {
 				ipv6 = ipa;
@@ -74,10 +81,7 @@ public class DeviceInfo extends JFrame {
 			}
 		}
 		
-		if (ip.getHostName().startsWith("sky")) {
-			dhcp = true;
-		}
-		
+		//GUI design
 		lblTitle = new JLabel(hostName);
 		lblTitle.setFont(new Font("Sans", Font.BOLD, 15));
 		add(lblTitle);
@@ -125,13 +129,15 @@ public class DeviceInfo extends JFrame {
 			e.printStackTrace();
 		}
 		
+		//handler for mouse clicks and Swing buttons
 		EventHandler handler = new EventHandler();
 		btnPortScan.addActionListener(handler);
 		btnPortConnect.addActionListener(handler);
 		btnClear.addActionListener(handler);
 
 	}
-
+	
+	//construct array of common TCP port numbers
 	public ArrayList<Integer> constructPortsArray() {
 		ArrayList<Integer> array = new ArrayList<Integer>();
 		Scanner pScan = null;
@@ -147,6 +153,7 @@ public class DeviceInfo extends JFrame {
 	    return array;
 	}
 	
+	//find the IPv6 instance of this device
 	public String getIpv6Addresses(InetAddress[] addresses) {
 	    for (InetAddress addr : addresses) {	    	
 	        if (addr instanceof Inet6Address) {
@@ -156,7 +163,9 @@ public class DeviceInfo extends JFrame {
 	    return "Device is not IPv6 capable.";
 	}
 	
+	//get device IP MAC and IoT specifications
 	private void getDeviceSpecs() throws UnknownHostException {
+		//get network interface of the device
 		NetworkInterface netInterface = null;
 		try {
 			netInterface = NetworkInterface.getByInetAddress(ip);
@@ -164,15 +173,18 @@ public class DeviceInfo extends JFrame {
 			e3.printStackTrace();
 		}
 
+		//fields for API call and ARP command
 		URL url = null;
 		String cmd = null;
 		
+		//change ARP command based on System OS
 		if(System.getProperties().getProperty("os.name").startsWith("Windows")) {
 			cmd = "arp -a ";
 		} else {
 			cmd = "arp ";
 		}
 		
+		//if device is the localhost, get MAC address and OS information
 		if(ip.equals(InetAddress.getLocalHost())) {
 			byte[] hwAddr = null;
 			try {
@@ -198,6 +210,7 @@ public class DeviceInfo extends JFrame {
 				txtSpec.append("\nIOT Device: False");
 			}
 
+			//otherwise, get MAC address and vendor
 		} else {
 		
 			try {
@@ -222,6 +235,7 @@ public class DeviceInfo extends JFrame {
 			    
 			    macReader.close();
 			    
+			    //MAC Vendor API call to get the vendor
 			    try {
 					url = new URL("https://api.macvendors.com/" + mac);
 					
@@ -250,9 +264,7 @@ public class DeviceInfo extends JFrame {
 					txtSpec.append("MAC Address: " + mac + "\n");
 					if(responseContent.toString().startsWith("TP-LINK")) {
 						iot = true;
-					}
-					
-						
+					}	
 					
 				} catch (MalformedURLException e1) {
 					e1.printStackTrace();
@@ -275,6 +287,7 @@ public class DeviceInfo extends JFrame {
 		}
 	}
 	
+	//SwingUtil worker to scan ports
 	class Worker extends SwingWorker<Void, Void> {
 		@Override
 		protected Void doInBackground() throws Exception {
@@ -301,7 +314,7 @@ public class DeviceInfo extends JFrame {
 		
 	}
 	
-	
+	//Event Handler for button presses
 	private class EventHandler implements ActionListener {
 		
 		public void actionPerformed(ActionEvent event) {

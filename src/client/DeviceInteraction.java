@@ -7,10 +7,15 @@ import java.net.Socket;
 
 import javax.swing.*;
 
+/**
+ * Device Interaction
+ * Send packet data to the Server
+ */
 public class DeviceInteraction extends JFrame {
 	
 	private static final long serialVersionUID = 1L;
 	
+	//fields for device specs and Server socket
 	private Socket servSock;
 	private String inetaddress;
 	private String mac;
@@ -18,6 +23,7 @@ public class DeviceInteraction extends JFrame {
 	
 	private JLabel lblComm;
 	
+	//invisible GUI (previously visible)
 	public DeviceInteraction(String inetaddress, int portNo, String mac)  {
 		setTitle("Device Interaction");
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -49,6 +55,7 @@ public class DeviceInteraction extends JFrame {
 		
 	}
 	
+	//open Socket connection with the Server
 	private void serverComm() throws IOException {
 		PrintWriter pr = new PrintWriter(servSock.getOutputStream());
 		pr.println("Connect to " + inetaddress.toString() + " on port " + portNo);
