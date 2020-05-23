@@ -10,6 +10,7 @@ import org.pcap4j.util.NifSelector;
 
 public class Main {
 	
+	//static fields for chosen Pcap4j Network Interface to listen on and IPv4 address for translation
 	public static PcapNetworkInterface netDevice = null;
 	public static InetAddress ipv4DeskAddr = null;
 
@@ -23,6 +24,7 @@ public class Main {
 			System.exit(1);
 		}
 		
+		//Start SwingUtil Client thread
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -30,6 +32,7 @@ public class Main {
 			}
 		});
 		
+		//Start SwingUtil Server thread
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -38,6 +41,7 @@ public class Main {
 		});
 	}
 	
+	//Get the Network Interface from the System Network Interfaces
 	static PcapNetworkInterface getNetworkInterface() {
 		PcapNetworkInterface nif = null;
 		try {

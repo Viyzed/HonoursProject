@@ -9,13 +9,14 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 
+/**
+ * Main Client GUI and network scanner
+ */
 public class DeviceScanner extends JFrame {
-	
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 	
+	//Swing components
 	private JLabel lblTitle;
 	private JLabel lblScan;
 	private JButton btnScan;
@@ -26,6 +27,7 @@ public class DeviceScanner extends JFrame {
 	private JLabel lblStatus;
 	private DefaultListModel<String> lstIPM;
 	
+	//IP addresses and SwingUtil thread worker for ip scanning
 	byte[] ip;
 	ArrayList<JLabel> foundIp;
 	Worker scanWorker = new Worker();
@@ -85,7 +87,7 @@ public class DeviceScanner extends JFrame {
 		lblStatus = new JLabel("Ready to scan.", JLabel.CENTER);
 		add(lblStatus);
 	
-		
+		//Event handlers for button presses and mouse actions
 		EventHandler handler = new EventHandler();
 		MouseHandler mHandler = new MouseHandler();
 		btnScan.addActionListener(handler);
@@ -94,6 +96,7 @@ public class DeviceScanner extends JFrame {
 
 	}
 	
+	//SwingUtil thread worker thread
 	class Worker extends SwingWorker<Void, Void> {
 			@Override
 			protected Void doInBackground() throws Exception {
@@ -102,32 +105,31 @@ public class DeviceScanner extends JFrame {
 				for(int i=1;i<256;i++) {
 	        		final int j = i;  
 	        		if(btnReset.getText().equals("Stop")) {
-		        		
-		           			 	
-		                		try {
-		                    		ip[3] = (byte)j;
-		                    		InetAddress address = InetAddress.getByAddress(ip);
-		                    		String output = address.toString().substring(1);
-		                    		if (address.isReachable(500)) {
-		                    			InetAddress[] addresses = InetAddress.getAllByName(address.getHostName());
-		                        		System.out.println(output + " is on the network");
-		                        		foundIp.add(new JLabel(output + ">" + address.getHostName()));
-		                        		String element = null;
-		                        		for(InetAddress ipv6 : addresses) {
-		                        			if(ipv6 instanceof Inet6Address) {
-		                        				element = (output + ">" + address.getHostName() + " ");
-		                        			} else {
-		                        				element = (output + ">" + address.getHostName());
-		                        			}
-		                        		}
-		                        		lstIPM.addElement(element);
-		                        		
-		                    		} else {
-		                        		System.out.println("Not Reachable: "+output);
-		                    		}
-		                		} catch (Exception e) {
-		                    		e.printStackTrace();
-		                		}
+		        			//add IP address and IPv6 address to JList if IP is found
+	                		try {
+	                    		ip[3] = (byte)j;
+	                    		InetAddress address = InetAddress.getByAddress(ip);
+	                    		String output = address.toString().substring(1);
+	                    		if (address.isReachable(500)) {
+	                    			InetAddress[] addresses = InetAddress.getAllByName(address.getHostName());
+	                        		System.out.println(output + " is on the network");
+	                        		foundIp.add(new JLabel(output + ">" + address.getHostName()));
+	                        		String element = null;
+	                        		for(InetAddress ipv6 : addresses) {
+	                        			if(ipv6 instanceof Inet6Address) {
+	                        				element = (output + ">" + address.getHostName() + " ");
+	                        			} else {
+	                        				element = (output + ">" + address.getHostName());
+	                        			}
+	                        		}
+	                        		lstIPM.addElement(element);
+	                        		
+	                    		} else {
+	                        		System.out.println("Not Reachable: "+output);
+	                    		}
+	                		} catch (Exception e) {
+	                    		e.printStackTrace();
+	                		}
 		           			 	
 		    				  
         				} else break;
@@ -138,10 +140,9 @@ public class DeviceScanner extends JFrame {
 			
 	}
 	
+	//highlight the device in red if IPv6 address is found
 	private static class RedCellRenderer extends DefaultListCellRenderer {
-        /**
-		 * 
-		 */
+
 		private static final long serialVersionUID = 1L;
 
 		public Component getListCellRendererComponent( JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus ) {
@@ -154,7 +155,7 @@ public class DeviceScanner extends JFrame {
         }
     }
 	
-	
+	//Handlers for Swing buttons
 	private class EventHandler implements ActionListener {
 		
 		public void actionPerformed(ActionEvent event) {
@@ -172,7 +173,6 @@ public class DeviceScanner extends JFrame {
 					lblStatus.setText("Ready to scan.");
 					scanWorker.cancel(true);
 					//System.out.println(foundIp);
-
 					
 				} else {
 					lstIPM.clear();
@@ -183,6 +183,7 @@ public class DeviceScanner extends JFrame {
 		
 	}
 	
+	//Handler for mouse activity
 	private class MouseHandler extends MouseAdapter implements MouseListener {
 
 		@Override

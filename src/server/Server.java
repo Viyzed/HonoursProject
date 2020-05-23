@@ -49,14 +49,20 @@ import org.pcap4j.packet.namednumber.IcmpV4Type;
 import org.pcap4j.packet.namednumber.IpNumber;
 import org.pcap4j.packet.namednumber.IpVersion;
 
+/**
+ * Server class for handling Packet translation
+ */
+
 public class Server extends JFrame {
 	
 	private static final long serialVersionUID = 1L;
 	
+	//fields for port number and Socket to run on the Server
 	static final int PORT = 5000;
 	private ServerSocket sSocket;
 	private Socket cSocket;
-		
+	
+	//fields for port and IP address for the Client
 	private InetAddress dInetaddress;
 	private int dPort;
 	private String sInetaddress;
@@ -73,9 +79,11 @@ public class Server extends JFrame {
 	private JScrollPane txtScl;
 	private JButton btnPwr;
 		
+	//SwingUtil worker thread for listening for packets
 	private Worker listenWorker = new Worker();
 	
 	public Server() {
+		//Set JFrame components
 		super("Server");
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -107,29 +115,34 @@ public class Server extends JFrame {
 		lowerPanel.add(btnPwr);
 		add(lowerPanel, BorderLayout.SOUTH);
 		
+		//Button handlers
 		EventHandler handler = new EventHandler();
 		btnPwr.addActionListener(handler);
-		
 
 	}
 	
+	//SwingWorker for capturing and translating an IPv4 packet to IPv6 with Pcap4j
 	class Worker extends SwingWorker<Void, Void> {
 		@Override
 		protected Void doInBackground() throws Exception {
+			//fields for server listening Socket and logging information about connection
 			sSocket = new ServerSocket(PORT);
 			txtLog.append("Server running and listening on port " + PORT + "\n\n");
 			cSocket = sSocket.accept();
 			System.out.println("Client connected");
 			
+			//InputStreamer and BufferedReader to get input from the Client
 			InputStreamReader in = new InputStreamReader(cSocket.getInputStream());
 			BufferedReader br = new BufferedReader(in);
 			
+			//append Client input to the Server log
 			String comm = br.readLine();
 			txtLog.append(comm+"\n\n");
 			String sInetaddress = br.readLine();
 			String sPort = br.readLine();
 			String macAddr = br.readLine();
 			
+			//Client IP address and port number
 			dInetaddress = InetAddress.getByName(sInetaddress);
 			dPort = Integer.parseInt(sPort);
 			sInetaddress = dInetaddress.getHostAddress();
@@ -139,7 +152,8 @@ public class Server extends JFrame {
 			int readTimeout = 50; //in milliseconds
 			final PcapHandle handle;
 			handle = Main.netDevice.openLive(snapshotLength, PromiscuousMode.PROMISCUOUS, readTimeout);
-			//set a filter to only listen for tcp packets on port 80 (HTTP)
+			//set a filter to only listen for icmp6 packets where the source MAC address
+			//matches the Client MAC address and send the ICMPv6 request
 			String filter = "(icmp6 and ether dst " + macAddr + ")";
 			handle.setFilter(filter, BpfCompileMode.OPTIMIZE);
 			Runtime.getRuntime().exec("ping -6 " + sInetaddress);
@@ -148,8 +162,6 @@ public class Server extends JFrame {
 			PacketListener listener = new PacketListener() {
 				@Override
 				public void gotPacket(Packet packet) {
-					
-					
 					//deconstruct ICMPv6 packet
 					txtLog.append(handle.getTimestamp().toString() + "\n\n");
 					txtLog.append(packet.toString() + "\n\n");
@@ -182,6 +194,7 @@ public class Server extends JFrame {
 						}
 					};
 					
+					//wrap payload data in TCP packet
 					TcpPacket payloadPacket = null;
 					try {
 						payloadPacket = TcpPacket.newPacket(payloadHeader.getRawData(), 0, payloadHeader.length());
@@ -189,7 +202,6 @@ public class Server extends JFrame {
 						e1.printStackTrace();
 					}
 					Packet.Builder payloadBuilder = payloadPacket.getBuilder();
-					
 					txtLog.append("Payload Header: \n" + payloadBuilder.build().toString() + "\n\n");
 					try {
 						txtLog.append("TCP Data: \n" + new String(payloadBuilder.build().getRawData(), "UTF-8") + "\n\n");
@@ -197,13 +209,15 @@ public class Server extends JFrame {
 						e1.printStackTrace();
 					}
 				    
+					//wrap TCP wrapped payload in ICMPv4 packet
 				    IcmpV4Type type = IcmpV4Type.ECHO;
 				    IcmpV4Code code = IcmpV4Code.NO_CODE;
 					final Packet.Builder icmpV4eb = new IcmpV4EchoPacket.Builder();
-					//icmpV4eb
-					//	.payloadBuilder(payloadBuilder);
+					icmpV4eb
+						.payloadBuilder(payloadBuilder);
 					txtLog.append("ICMPv4 Echo Packet: \n" + icmpV4eb.build().toString() + "\n\n");
 					
+					//wrap ICMPv4 Echo packet in an ICMPv4 Common packet
 					final IcmpV4CommonPacket.Builder icmpV4b = new IcmpV4CommonPacket.Builder();
 					icmpV4b
 						.type(type)
@@ -212,6 +226,7 @@ public class Server extends JFrame {
 						.correctChecksumAtBuild(true);
 					txtLog.append("ICMPv4 Packet: \n" + icmpV4b.build().toString() + "\n\n");
 					
+					//wrap ICMPv4 Common packet in an IPv4 packet
 					final IpV4Packet.Builder ipv4b = new IpV4Packet.Builder();
 				    ipv4b
 				        .version(IpVersion.IPV4)
@@ -223,9 +238,9 @@ public class Server extends JFrame {
 				        .correctChecksumAtBuild(true)
 				        .correctLengthAtBuild(true);
 				    
+				    //wrap IPv4 packet in an Ethernet packet
 				    final EthernetPacket.Builder eb = new EthernetPacket.Builder();
 				    eb.type(EtherType.IPV4).payloadBuilder(ipv4b).paddingAtBuild(true);
-				    
 				    
 				    ipv4b.dstAddr((Inet4Address) Main.ipv4DeskAddr);
 			        try {
@@ -239,10 +254,12 @@ public class Server extends JFrame {
 			        eb.dstAddr(packet.get(EthernetPacket.class).getHeader().getDstAddr());
 			        txtLog.append("Ethernet Packet: " + eb.build().toString() + "\n\n");
 			        
+			        //build wrapped IPv4 packet
 			        Packet IcmpV4Pack = eb.build();
 			        
 			        txtLog.append("IPv6 Packet translated to IPv4.\n\n");
 					
+			        //send IPv4 packet
 			        try {
 			        	handle.sendPacket(IcmpV4Pack);
 			        	txtLog.append("IPv4 Packet sent.");
@@ -277,6 +294,7 @@ public class Server extends JFrame {
 		
 	} 
 	
+	//Handlers for button events and JCopmonent changes
 	private class EventHandler implements ActionListener {
 		
 		public void actionPerformed(ActionEvent event) {
